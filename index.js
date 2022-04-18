@@ -1,7 +1,8 @@
 const express = require('express');
+const res = require('express/lib/response');
 const mysql = require("mysql");
 const app = express();
-const PORT = 8080;
+const PORT = process.env.PORT || 8080;
 
 
 /* ----------------- Function to convert json data into excel file ----------------- */
@@ -37,7 +38,6 @@ connection.connect(function(error){
 app.use( express.json() )
 
 app.listen(
-    process.env.port ||
     PORT,
     ()=> console.log(`it's alive on http://localhost:${PORT}`)
 )
@@ -124,6 +124,11 @@ app.post('/student', (req, res) =>{
 });
 
 /* ----------------- API's Get methods starts from here ----------------- */
+
+//root API end
+app.get('/', (req, res)=>{
+    res.send("Hello World !!");
+});
 
 //for getting all the data present in student table
 app.get('/student', (req, res)=>{
