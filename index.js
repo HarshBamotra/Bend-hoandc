@@ -37,6 +37,7 @@ connection.connect(function(error){
 app.use( express.json() )
 
 app.listen(
+    process.env.port ||
     PORT,
     ()=> console.log(`it's alive on http://localhost:${PORT}`)
 )
