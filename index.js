@@ -3,6 +3,19 @@ const mysql = require("mysql");
 const app = express();
 const PORT = 8080;
 
+
+/* ----------------- Function to convert json data into excel file ----------------- */
+/*import XLSX from "xlsx"
+function ExportData(data)
+    {
+        filename='reports.xlsx';
+        var ws = XLSX.utils.json_to_sheet(data);
+        var wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "People");
+        XLSX.writeFile(wb,filename);
+    }*/
+
+
 /* ----------------- Node and MySql server connection ----------------- */
 var connection = mysql.createConnection({
     host:"localhost",
@@ -224,60 +237,129 @@ app.get('/work/:email', (req, res)=>{
     })
 });
 
-/* ----------------- API's Get methods starts from here ----------------- */
+//for getting alumni data of a specific course
+app.get('/course/:Cname', (req, res)=>{
+    const { Cname } = req.params;
+
+    connection.query(`SELECT * FROM STUDENT WHERE COURSE LIKE '${Cname}';`, function(error, row){
+        if(!!error){
+            res.send({
+                Message:"Error : " + error.message,
+            });
+        }
+        else if(row.length <= 0){
+            res.send({
+                Message:`No entries with course ${Cname} found !!`,
+            });
+        }
+        else{
+            res.status(200).send({
+                row
+            })
+        }
+    })
+});
+
+//for getting alumni data of a specific course
+app.get('/yearofGraduation/:year', (req, res)=>{
+    const { year } = req.params;
+
+    connection.query(`SELECT * FROM STUDENT WHERE year(YOG) = '${year}';`, function(error, row){
+        if(!!error){
+            res.send({
+                Message:"Error : " + error.message,
+            });
+        }
+        else if(row.length <= 0){
+            res.send({
+                Message:`No entries with year of graduation ${year} found !!`,
+            });
+        }
+        else{
+            res.status(200).send({
+                row
+            })
+        }
+    })
+});
+
+/* ----------------- API's delete methods starts from here ----------------- */
 
 //for deleting an entry by email (Admin only feature)
 app.delete('/student/:email', (req, res)=>{
     const { email } = req.params;
-    var HE, job;                    //bug
+    var HE, job;                  
     connection.query(`SELECT Higher_Education, Job FROM STUDENT WHERE EMAIL = '${email}';`, function(error, row){
         if(!!error){
             console.log("Error : " + error.message);
         }
         else if(row.length <= 0){
             console.log(`Entry with ID ${email} not found !!`);
+            res.send({
+                Message:`Entry with ID ${email} not found !!`,
+            });
         }
         else{
             HE = row[0].Higher_Education;
             job = row[0].Job;
+
+            if(HE == 1){
+                connection.query(`DELETE FROM HIGHER_EDU WHERE EMAIL = '${email}';`, function(error){
+                    if(!!error){
+                        console.log("Error(Higher_edu): " + error.message);
+                    }
+                    else{
+                        console.log(`Entry with email ${email} deleted from higher_edu succesfully !!`);
+                    }
+                })
+            }
+        
+            if(job == 1){
+                connection.query(`DELETE FROM WORK WHERE EMAIL = '${email}';`, function(error){
+                    if(!!error){
+                        console.log("Error(Work): " + error.message);
+                    }
+                    else{
+                        console.log(`Entry with email ${email} deleted from work succesfully !!`);
+                    }
+                })
+            }
+
+            connection.query(`DELETE FROM STUDENT WHERE EMAIL = '${email}';`, function(error){
+                if(!!error){
+                    console.log("Error(Student): " + error.message);
+                    res.send({
+                        Message:"Some error occured !! please check console for more details.",
+                    });
+                }
+                else{
+                    res.send({
+                        Message:`Entry with email ${email} deleted succesfully !!`,
+                    });
+                }
+            })
         }
     })
+});
 
-    console.log(HE);
-    if(HE == 1){
-        connection.query(`DELETE FROM HIGHER_EDU WHERE EMAIL = '${email}';`, function(error){
-            if(!!error){
-                console.log("Error(Higher_edu): " + error.message);
-            }
-            else{
-                console.log(`Entry with email ${email} deleted from higher_edu succesfully !!`);
-            }
-        })
-    }
 
-    if(job == 1){
-        connection.query(`DELETE FROM WORK WHERE EMAIL = '${email}';`, function(error){
-            if(!!error){
-                console.log("Error(Work): " + error.message);
-            }
-            else{
-                console.log(`Entry with email ${email} deleted from work succesfully !!`);
-            }
-        })
-    }
+/* ----------------- API's Update methods starts from here ----------------- */
 
-    connection.query(`DELETE FROM STUDENT WHERE EMAIL = '${email}';`, function(error){
+app.put('/student/email/:email', (req, res)=>{
+    const { email } = req.params;
+    const { Name } = req.body;
+
+    connection.query(`UPDATE TABLE STUDENT SET NAME = "${ Name }" where EMAIL = "${ email }"`, 
+    function(error){
         if(!!error){
-            console.log("Error(Student): " + error.message);
             res.send({
-                Message:"Some error occured !! please check console for more details.",
+                Message:"Error ::" + error.message,
             });
         }
         else{
             res.send({
-                Message:`Entry with email ${email} deleted succesfully !!`,
+                Message:`Entry with ${ email } updated with name ${ Name } sucessfully !!`,
             });
         }
     })
-
 });
