@@ -18,6 +18,8 @@ function ExportData(data)
 
 
 /* ----------------- Node and MySql server connection ----------------- */
+
+
 var connection = mysql.createConnection({
     host:"localhost",
     user:"root",
@@ -157,7 +159,7 @@ app.get('/student/email/:email', (req, res)=>{
     const { email } = req.params;
 
     connection.query(`SELECT * FROM STUDENT WHERE EMAIL = '${email}';`, function(error, row){
-        if(!!error){
+        if(error){
             res.send({
                 Message:"Error : " + error.message,
             });
@@ -221,7 +223,7 @@ app.get('/student/name/:name', (req, res)=>{
     })
 });
 
-//for getting higer education data of an alumni by email id
+//for getting higher education data of an alumni by email id
 app.get('/higher_edu/:email', (req, res)=>{
     const { email } = req.params;
 
